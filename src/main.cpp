@@ -362,6 +362,11 @@ int main() {
               new_lane = 1;
             }
 
+            if (lane != new_lane)
+            {
+              cout<<"shifting from lane "<<lane<<" to lane "<<new_lane<<endl;
+            }
+
             lane = new_lane;
 
             if (too_close)
