@@ -253,6 +253,7 @@ int main() {
             double front_speed[3] = {50, 50, 50}; //speed ahead
             double min_dist_front[3] = {200, 200, 200}; //minimum distance to the front
             double min_dist_rear[3] = {200, 200, 200}; // minimum distance to the rear
+            double min_expected_rear[3] = {200, 200, 200};
             
             for (int i = 0; i < sensor_fusion.size(); ++i)
             {
@@ -271,6 +272,7 @@ int main() {
                 {
                   min_dist_rear[(int)check_d/4] = car_s-check_s;
                   rear_speed[(int)check_d/4] = check_speed;
+                  min_expected_rear[(int)check_d/4] = min_dist_rear[(int)check_d/4] - (check_speed - car_speed)*2/2.24;
                 }
               }
               else //front vehicles
@@ -279,6 +281,14 @@ int main() {
                 {
                   min_dist_front[(int)check_d/4] = check_s - car_s;
                   front_speed[(int)check_d/4] = check_speed;
+                }
+              }
+
+              if (car_s-check_s < 50)
+              {
+                if (( car_s - check_s + (car_speed - check_speed)*2/2.24) < min_expected_rear[(int)check_d/4])
+                {
+                  min_expected_rear[(int)check_d/4] =  (car_s - check_s + (car_speed - check_speed)*2/2.24);
                 }
               }
             }
@@ -294,7 +304,7 @@ int main() {
             {
               if (lane == 2 || lane == 0)
               {
-                if (min_dist_front[1] > 30 && min_dist_rear[1] > 20 && car_speed > rear_speed[1] - 5 )
+                if (min_dist_front[1] > 30 && min_expected_rear[1] > 30)
                 {
                   if (min_dist_front[lane] < 30)
                   {
@@ -308,16 +318,16 @@ int main() {
                     new_lane = 1;
                   }
                 }
-                if (min_dist_front[1] > 180 && min_dist_rear[1] > 20)
-                {
-                  new_lane = 1;
-                }
+                // if (min_dist_front[1] > 180 && min_dist_rear[1] > 20)
+                // {
+                //   new_lane = 1;
+                // }
               }
               else
               {
                 if (min_dist_front[lane] < 30)
                 {
-                  if (min_dist_front[2] > 45 && min_dist_rear[2] > 20 && car_speed > rear_speed[2] - 5 && front_speed[2] > front_speed[lane])
+                  if (((min_dist_front[2] > 60) ||((min_dist_front[2] > 45) && (front_speed[2] > front_speed[lane]))) && min_expected_rear[2] > 30)
                   {
                     if (front_speed[2] > front_speed[0])
                     {
@@ -331,7 +341,7 @@ int main() {
                       }
                     }
                   }
-                  if (min_dist_front[0] > 45 && min_dist_rear[0] > 20 && car_speed > rear_speed[0] - 5 && front_speed[0] > front_speed[lane])
+                  if (((min_dist_front[0] > 60) || ((min_dist_front[0] > 45) && (front_speed[0] > front_speed[lane]))) && min_expected_rear[0] > 30)
                   {
                     if (front_speed[0] > front_speed[2])
                     {
@@ -345,11 +355,11 @@ int main() {
                       }
                     }
                   }
-                  if (min_dist_front[2] > 180)
+                  if (min_dist_front[2] > 180 && min_expected_rear[2] > 30)
                   {
                     new_lane = 2;
                   }
-                  if (min_dist_front[0] > 180)
+                  if (min_dist_front[0] > 180 && min_expected_rear[0] > 30)
                   {
                     new_lane = 0;
                   }
@@ -357,9 +367,14 @@ int main() {
               }
             }
 
-            if (min_dist_front[1] > 120 && min_dist_rear[1] > 20)
+            if (min_dist_front[1] > 120 && min_expected_rear[1] > 30)
             {
               new_lane = 1;
+            }
+
+            if (lane != new_lane)
+            {
+              cout<<"shifting from lane "<<lane<<" to lane "<<new_lane<<endl;
             }
 
             lane = new_lane;
